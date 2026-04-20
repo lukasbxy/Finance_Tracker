@@ -21,6 +21,9 @@ import { MetricCard } from '../components/UI/MetricCard'
 import { YearlyPerformance } from '../components/Analytics/YearlyPerformance'
 import { AssetClassAnalysis } from '../components/Analytics/AssetClassAnalysis'
 import { ProjectedWealth } from '../components/Analytics/ProjectedWealth'
+import { TopMovers } from '../components/Analytics/TopMovers'
+import { FinancialFreedom } from '../components/Analytics/FinancialFreedom'
+import { PortfolioHealth } from '../components/Analytics/PortfolioHealth'
 import { AddBalanceModal } from '../components/Accounts/AddBalanceModal'
 import { AccountForm } from '../components/Accounts/AccountForm'
 import { TypeIcon } from '../components/UI/TypeIcon'
@@ -242,6 +245,12 @@ export function Dashboard() {
             <AssetClassAnalysis accounts={accounts} entries={entries} />
             <ProjectedWealth totalWealth={totalWealth} avgMonthlyChange={avgMonthlyChange} />
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
+          <FinancialFreedom totalWealth={totalWealth} />
+          <TopMovers accounts={accounts} entries={entries} />
+          <PortfolioHealth accounts={accounts} entries={entries} />
         </div>
       </div>
 
