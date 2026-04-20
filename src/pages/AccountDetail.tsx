@@ -53,7 +53,7 @@ export function AccountDetail() {
       >
         <button
           onClick={() => navigate('/accounts')}
-          className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/8 transition-colors"
+          className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
         >
           <ArrowLeft size={20} />
         </button>

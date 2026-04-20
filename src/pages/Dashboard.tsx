@@ -113,7 +113,7 @@ export function Dashboard() {
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   timeRange === r
                     ? 'bg-accent-500/30 text-accent-300 border border-accent-500/30'
-                    : 'text-gray-500 hover:text-gray-300 hover:bg-white/8'
+                    : 'text-gray-500 hover:text-gray-300 hover:bg-white/10'
                 }`}
               >
                 {r === 'all' ? 'Alles' : r}
@@ -149,7 +149,7 @@ export function Dashboard() {
                   transition={{ delay: i * 0.06 }}
                 >
                   <div
-                    className="glass rounded-2xl p-4 cursor-pointer hover:bg-white/8 transition-colors group"
+                    className="glass rounded-2xl p-4 cursor-pointer hover:bg-white/10 transition-colors group"
                     onClick={() => navigate(`/accounts/${account.id}`)}
                   >
                     <div className="flex items-start justify-between mb-3">

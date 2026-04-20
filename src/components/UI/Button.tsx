@@ -13,7 +13,7 @@ export function Button({ variant = 'primary', size = 'md', loading, children, cl
   const variants = {
     primary: 'bg-accent-500 hover:bg-accent-600 text-white shadow-lg shadow-accent-500/25',
     secondary: 'bg-white/10 hover:bg-white/15 text-white border border-white/10',
-    ghost: 'text-gray-400 hover:text-white hover:bg-white/8',
+    ghost: 'text-gray-400 hover:text-white hover:bg-white/10',
     danger: 'bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/20',
   }
 
