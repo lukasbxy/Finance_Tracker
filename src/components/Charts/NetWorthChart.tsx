@@ -20,9 +20,9 @@ function CustomTooltip({ active, payload, label }: any) {
   const total = sortedPayload.find(p => p.dataKey === 'total')?.value || 0
 
   return (
-    <div className="glass rounded-2xl px-4 py-3 text-sm shadow-2xl border border-white/10 min-w-[200px]">
-      <p className="text-gray-400 text-xs mb-2 font-medium uppercase tracking-wider">{label}</p>
-      <div className="space-y-1.5 mb-2 max-h-48 overflow-y-auto pr-1">
+    <div className="glass rounded-2xl px-4 py-3 text-sm shadow-2xl border border-white/10 min-w-[220px] pointer-events-auto">
+      <p className="text-gray-400 text-xs mb-2 font-bold uppercase tracking-wider">{label}</p>
+      <div className="space-y-1.5 mb-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
         {sortedPayload.map((entry: any) => {
           if (entry.dataKey === 'total') return null
           const percent = total > 0 ? ((entry.value / total) * 100).toFixed(1) : 0
@@ -113,7 +113,11 @@ export function NetWorthChart({ accounts, entries, days = 365 }: Props) {
             }
             width={50}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip 
+            content={<CustomTooltip />} 
+            position={{ y: 0 }}
+            wrapperStyle={{ pointerEvents: 'auto', outline: 'none' }}
+          />
           <Legend 
             verticalAlign="top" 
             height={36} 
