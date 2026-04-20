@@ -18,6 +18,9 @@ import { NetWorthChart } from '../components/Charts/NetWorthChart'
 import { AllocationChart } from '../components/Charts/AllocationChart'
 import { MonthlyChangeChart } from '../components/Charts/MonthlyChangeChart'
 import { MetricCard } from '../components/UI/MetricCard'
+import { YearlyPerformance } from '../components/Analytics/YearlyPerformance'
+import { AssetClassAnalysis } from '../components/Analytics/AssetClassAnalysis'
+import { ProjectedWealth } from '../components/Analytics/ProjectedWealth'
 import { AddBalanceModal } from '../components/Accounts/AddBalanceModal'
 import { AccountForm } from '../components/Accounts/AccountForm'
 import { TypeIcon } from '../components/UI/TypeIcon'
@@ -223,6 +226,22 @@ export function Dashboard() {
             </h3>
             <MonthlyChangeChart entries={entries} />
           </Card>
+        </div>
+      </div>
+
+      {/* High-Level Analytics Section */}
+      <div className="space-y-6 pt-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Detaillierte Auswertungen</h2>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <YearlyPerformance entries={entries} />
+          </div>
+          <div className="space-y-8">
+            <AssetClassAnalysis accounts={accounts} entries={entries} />
+            <ProjectedWealth totalWealth={totalWealth} avgMonthlyChange={avgMonthlyChange} />
+          </div>
         </div>
       </div>
 
