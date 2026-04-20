@@ -10,10 +10,10 @@ interface Props {
 }
 
 const CATEGORIES = [
-  { id: 'safe', label: 'Sicherheit', types: ['bank', 'savings', 'cash'], icon: Shield, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-  { id: 'invested', label: 'Investiert', types: ['depot'], icon: TrendingUp, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-  { id: 'speculative', label: 'Spekulativ', types: ['crypto'], icon: Zap, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-  { id: 'other', label: 'Sonstiges', types: ['wallet', 'paypal', 'other'], icon: HelpCircle, color: 'text-gray-400', bg: 'bg-gray-500/10' },
+  { id: 'safe', label: 'Sicherheit', types: ['bank', 'savings', 'cash'], icon: Shield, color: 'text-emerald-400', bg: 'bg-emerald-500/10', bar: 'bg-emerald-500' },
+  { id: 'invested', label: 'Investiert', types: ['depot'], icon: TrendingUp, color: 'text-blue-400', bg: 'bg-blue-500/10', bar: 'bg-blue-500' },
+  { id: 'speculative', label: 'Spekulativ', types: ['crypto'], icon: Zap, color: 'text-amber-400', bg: 'bg-amber-500/10', bar: 'bg-amber-500' },
+  { id: 'other', label: 'Sonstiges', types: ['wallet', 'paypal', 'other'], icon: HelpCircle, color: 'text-gray-400', bg: 'bg-gray-500/10', bar: 'bg-gray-400' },
 ]
 
 export function AssetClassAnalysis({ accounts, entries }: Props) {
@@ -50,7 +50,7 @@ export function AssetClassAnalysis({ accounts, entries }: Props) {
             </div>
             <div className="relative h-2 bg-white/5 rounded-full overflow-hidden">
               <div 
-                className={`absolute top-0 left-0 h-full transition-all duration-1000 ${cat.bg.replace('/10', '/40')}`}
+                className={`absolute top-0 left-0 h-full transition-all duration-1000 ${cat.bar}`}
                 style={{ width: `${cat.pct}%` }}
               />
             </div>
