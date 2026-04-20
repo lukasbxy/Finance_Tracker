@@ -39,11 +39,10 @@ export function AccountHistoryChart({ account, entries }: Props) {
   const color = account.color ?? '#6366f1'
   const [range, setRange] = useState<Range>('all')
 
-  const cutoffMs = RANGE_DAYS[range] === Infinity
-    ? 0
-    : Date.now() - RANGE_DAYS[range] * 86400_000
-
   const data = useMemo(() => {
+    const cutoffMs = RANGE_DAYS[range] === Infinity
+      ? 0
+      : Date.now() - RANGE_DAYS[range] * 86400_000
     const filtered = entries.filter(
       (e) => RANGE_DAYS[range] === Infinity || new Date(e.recorded_at).getTime() >= cutoffMs,
     )
@@ -53,7 +52,7 @@ export function AccountHistoryChart({ account, entries }: Props) {
         dateLabel: getDateLabel(e.recorded_at, RANGE_DAYS[range]),
         amount: Number(e.amount),
       }))
-  }, [entries, range, cutoffMs])
+  }, [entries, range])
 
   const gradId = `acHist_${account.id.replace(/-/g, '')}`
 
