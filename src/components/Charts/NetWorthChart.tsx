@@ -98,12 +98,12 @@ export function NetWorthChart({ accounts, entries, days = 365 }: Props) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
-        className="h-[300px] md:h-[350px] w-full"
+        className="h-[350px] md:h-[420px] w-full"
       >
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart 
             data={formatted} 
-            margin={{ top: 10, right: 10, bottom: 0, left: 0 }}
+            margin={{ top: 20, right: 10, bottom: 0, left: 0 }}
             onMouseMove={(e) => {
               if (e.activePayload) {
                 setActivePoint({ label: e.activeLabel, payload: e.activePayload })
@@ -142,13 +142,14 @@ export function NetWorthChart({ accounts, entries, days = 365 }: Props) {
               position={{ y: 0 }}
               wrapperStyle={{ pointerEvents: 'auto', outline: 'none' }}
             />
-            <Legend 
-              verticalAlign="top" 
-              height={36} 
-              iconType="circle" 
-              iconSize={8}
-              formatter={(value) => <span className="text-[10px] text-gray-500 font-medium">{value}</span>}
-            />
+          <Legend 
+            verticalAlign="bottom" 
+            align="center"
+            iconType="circle" 
+            iconSize={8}
+            wrapperStyle={{ paddingTop: '20px' }}
+            formatter={(value) => <span className="text-[10px] text-gray-500 font-medium">{value}</span>}
+          />
             
             {activeAccounts.map((account) => (
               <Area
