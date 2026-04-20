@@ -17,7 +17,7 @@ function CustomTooltip({ active, payload, label }: any) {
   
   // Sort payload by value descending for better readability
   const sortedPayload = [...payload].sort((a, b) => (b.value || 0) - (a.value || 0))
-  const total = sortedPayload.find(p => p.dataKey === 'total')?.value || 0
+  const total = payload.reduce((sum: number, entry: any) => sum + (entry.value || 0), 0)
 
   return (
     <div className="glass rounded-2xl px-4 py-3 text-sm shadow-2xl border border-white/10 min-w-[220px] pointer-events-auto hidden md:block">

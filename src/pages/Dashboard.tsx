@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { useAccounts } from '../hooks/useAccounts'
 import { useBalanceEntries } from '../hooks/useBalanceEntries'
+import { useUserSettings } from '../hooks/useUserSettings'
 import { Card } from '../components/UI/Card'
 import { Button } from '../components/UI/Button'
 import { NetWorthChart } from '../components/Charts/NetWorthChart'
@@ -46,6 +47,7 @@ const TIME_RANGE_LABELS: Record<TimeRange, string> = {
 export function Dashboard() {
   const { accounts, createAccount, loading: accountsLoading } = useAccounts()
   const { entries, addEntry, loading: entriesLoading } = useBalanceEntries()
+  const { settings } = useUserSettings()
   const navigate = useNavigate()
 
   const [timeRange, setTimeRange] = useState<TimeRange>('5y')
@@ -53,7 +55,13 @@ export function Dashboard() {
   const [showCreateAccount, setShowCreateAccount] = useState(false)
 
   const latestBalances = useMemo(() => getLatestBalancePerAccount(entries), [entries])
-  const activeAccounts = accounts.filter((a) => !a.is_closed)
+  const activeAccounts = useMemo(() => {
+    const raw = accounts.filter((a) => !a.is_closed)
+    const order = settings.accountOrder
+    if (!order?.length) return raw
+    const idx = new Map(order.map((id, i) => [id, i]))
+    return [...raw].sort((a, b) => (idx.get(a.id) ?? 9999) - (idx.get(b.id) ?? 9999))
+  }, [accounts, settings.accountOrder])
 
   const totalWealth = useMemo(
     () => activeAccounts.reduce((sum, a) => sum + (latestBalances[a.id] ?? 0), 0),
