@@ -65,18 +65,26 @@ export function buildNetWorthTimeSeries(
     sampled.push(todayStart)
   }
 
+  const accountIds = Array.from(new Set(entries.map(e => e.account_id)))
+
   return sampled.map((day) => {
     // Für jeden Tag den Stand am ENDE des Tages berechnen
-    // Für heute (letzter Punkt) nehmen wir 'now', um alles bis zu dieser Sekunde einzubeziehen
     const isToday = day.getTime() === todayStart.getTime()
     const cutoff = isToday ? now : endOfDay(day)
     
     const balances = getLatestBalancePerAccount(entries, cutoff)
     const total = Object.values(balances).reduce((sum, v) => sum + v, 0)
+    
+    // Sicherstellen, dass jedes Konto einen Wert hat (Default 0)
+    const allBalances: Record<string, number> = {}
+    for (const id of accountIds) {
+      allBalances[id] = balances[id] ?? 0
+    }
+
     return {
       date: format(day, 'yyyy-MM-dd'),
       total,
-      ...balances,
+      ...allBalances,
     }
   })
 }
