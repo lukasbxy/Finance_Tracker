@@ -27,6 +27,6 @@ dist-ssr/
 *.log
 npm-debug.log*
 
-# Chrome extension build
-chrome-extension/dist/
-chrome-extension/node_modules/
+
+# Agent context (contains internal project details)
+AGENTS.md
