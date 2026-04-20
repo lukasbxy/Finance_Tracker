@@ -23,24 +23,32 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
   )
 }
 
+function getDateLabel(dateStr: string, days: number): string {
+  const d = new Date(dateStr)
+  if (days <= 90) return d.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' })
+  if (days <= 365) return d.toLocaleDateString('de-DE', { month: 'short' })
+  return d.toLocaleDateString('de-DE', { month: 'short', year: '2-digit' })
+}
+
 export function NetWorthChart({ entries, days = 365 }: Props) {
   const data = useMemo(() => buildNetWorthTimeSeries(entries, days), [entries, days])
 
-  const formatted = data.map((d) => ({
+  const formatted = useMemo(() => data.map((d) => ({
     ...d,
-    dateLabel: new Date(d.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'short' }),
-  }))
+    dateLabel: getDateLabel(d.date, days),
+  })), [data, days])
 
-  const visibleTicks = formatted.filter((_, i) => {
-    const step = days <= 30 ? 5 : days <= 90 ? 10 : 30
-    return i % step === 0 || i === formatted.length - 1
-  })
+  const tickInterval = Math.max(1, Math.floor(formatted.length / 7))
+  const visibleTicks = formatted
+    .filter((_, i) => i % tickInterval === 0 || i === formatted.length - 1)
+    .map((d) => d.dateLabel)
 
   return (
     <motion.div
+      key={days}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
+      transition={{ duration: 0.4 }}
       className="h-64"
     >
       <ResponsiveContainer width="100%" height="100%">
@@ -57,7 +65,7 @@ export function NetWorthChart({ entries, days = 365 }: Props) {
             tick={{ fill: '#6b7280', fontSize: 11 }}
             axisLine={false}
             tickLine={false}
-            ticks={visibleTicks.map((d) => d.dateLabel)}
+            ticks={visibleTicks}
           />
           <YAxis
             tick={{ fill: '#6b7280', fontSize: 11 }}

@@ -53,9 +53,12 @@ export function buildNetWorthTimeSeries(
   const today = startOfDay(new Date())
   const start = subDays(today, days)
 
-  const dates = eachDayOfInterval({ start, end: today })
+  const step = days <= 90 ? 1 : days <= 365 ? 3 : days <= 730 ? 7 : days <= 1825 ? 14 : 30
+  const allDays = eachDayOfInterval({ start, end: today })
+  const sampled = allDays.filter((_, i) => i % step === 0)
+  if (sampled[sampled.length - 1]?.getTime() !== today.getTime()) sampled.push(today)
 
-  return dates.map((day) => {
+  return sampled.map((day) => {
     const balances = getLatestBalancePerAccount(entries, day)
     const total = Object.values(balances).reduce((sum, v) => sum + v, 0)
     return {

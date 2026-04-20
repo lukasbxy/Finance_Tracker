@@ -18,10 +18,14 @@ import {
 } from '../lib/utils'
 import type { Account } from '../types/finance'
 
-type TimeRange = '30d' | '90d' | '1y' | 'all'
+type TimeRange = '1m' | '3m' | '6m' | '1y' | '2y' | '3y' | '4y' | '5y' | '10y'
 
 const TIME_RANGE_DAYS: Record<TimeRange, number> = {
-  '30d': 30, '90d': 90, '1y': 365, 'all': 3650,
+  '1m': 30, '3m': 90, '6m': 180, '1y': 365, '2y': 730, '3y': 1095, '4y': 1460, '5y': 1825, '10y': 3650,
+}
+
+const TIME_RANGE_LABELS: Record<TimeRange, string> = {
+  '1m': '1M', '3m': '3M', '6m': '6M', '1y': '1J', '2y': '2J', '3y': '3J', '4y': '4J', '5y': '5J', '10y': '10J',
 }
 
 export function Dashboard() {
@@ -29,7 +33,7 @@ export function Dashboard() {
   const { entries, addEntry, loading: entriesLoading } = useBalanceEntries()
   const navigate = useNavigate()
 
-  const [timeRange, setTimeRange] = useState<TimeRange>('1y')
+  const [timeRange, setTimeRange] = useState<TimeRange>('5y')
   const [addBalanceFor, setAddBalanceFor] = useState<Account | null>(null)
   const [showCreateAccount, setShowCreateAccount] = useState(false)
 
@@ -105,18 +109,18 @@ export function Dashboard() {
               </span>
             </div>
           </div>
-          <div className="flex gap-1">
-            {(['30d', '90d', '1y', 'all'] as TimeRange[]).map((r) => (
+          <div className="flex flex-wrap gap-1">
+            {(Object.keys(TIME_RANGE_DAYS) as TimeRange[]).map((r) => (
               <button
                 key={r}
                 onClick={() => setTimeRange(r)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
                   timeRange === r
                     ? 'bg-accent-500/30 text-accent-300 border border-accent-500/30'
                     : 'text-gray-500 hover:text-gray-300 hover:bg-white/10'
                 }`}
               >
-                {r === 'all' ? 'Alles' : r}
+                {TIME_RANGE_LABELS[r]}
               </button>
             ))}
           </div>

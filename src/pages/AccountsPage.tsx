@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Wallet, ChevronRight, CheckCircle, RotateCcw, Trash2 } from 'lucide-react'
+import { Plus, Wallet, ChevronRight, CheckCircle, RotateCcw, Trash2, Pencil, Check, X } from 'lucide-react'
 import { useAccounts } from '../hooks/useAccounts'
 import { useBalanceEntries } from '../hooks/useBalanceEntries'
 import { Button } from '../components/UI/Button'
@@ -14,13 +14,16 @@ import { useMemo } from 'react'
 
 export function AccountsPage() {
   const navigate = useNavigate()
-  const { accounts, loading, createAccount, closeAccount, reopenAccount, deleteAccount } = useAccounts()
+  const { accounts, loading, createAccount, updateAccount, closeAccount, reopenAccount, deleteAccount } = useAccounts()
   const { entries, addEntry } = useBalanceEntries()
 
   const [showCreate, setShowCreate] = useState(false)
   const [closeTarget, setCloseTarget] = useState<Account | null>(null)
   const [addBalanceFor, setAddBalanceFor] = useState<Account | null>(null)
   const [showClosed, setShowClosed] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
+  const editInputRef = useRef<HTMLInputElement>(null)
 
   const latestBalances = useMemo(() => getLatestBalancePerAccount(entries), [entries])
   const lastUpdated = useMemo(() => {
@@ -36,6 +39,20 @@ export function AccountsPage() {
   const active = accounts.filter((a) => !a.is_closed)
   const closed = accounts.filter((a) => a.is_closed)
 
+  function startEdit(account: Account) {
+    setEditingId(account.id)
+    setEditName(account.name)
+    setTimeout(() => editInputRef.current?.focus(), 50)
+  }
+
+  async function commitEdit(id: string) {
+    const trimmed = editName.trim()
+    if (trimmed && trimmed !== accounts.find((a) => a.id === id)?.name) {
+      await updateAccount(id, { name: trimmed })
+    }
+    setEditingId(null)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -47,13 +64,15 @@ export function AccountsPage() {
   function AccountRow({ account }: { account: Account }) {
     const balance = latestBalances[account.id]
     const updated = lastUpdated[account.id]
+    const isEditing = editingId === account.id
 
     return (
       <motion.div
         layout
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: 10 }}
+        exit={{ opacity: 0, scale: 0.97 }}
+        transition={{ duration: 0.2 }}
         className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors group"
       >
         <div
@@ -63,16 +82,37 @@ export function AccountsPage() {
           {account.icon ?? getAccountTypeIcon(account.type)}
         </div>
 
-        <div
-          className="flex-1 min-w-0 cursor-pointer"
-          onClick={() => navigate(`/accounts/${account.id}`)}
-        >
-          <div className="flex items-center gap-2">
-            <p className="font-medium text-white truncate">{account.name}</p>
-            {account.is_closed && (
-              <span className="text-xs text-gray-500 bg-gray-800 rounded-full px-2 py-0.5">geschlossen</span>
-            )}
-          </div>
+        <div className="flex-1 min-w-0">
+          {isEditing ? (
+            <div className="flex items-center gap-1.5">
+              <input
+                ref={editInputRef}
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') commitEdit(account.id)
+                  if (e.key === 'Escape') setEditingId(null)
+                }}
+                className="bg-white/10 border border-white/20 rounded-lg px-2 py-0.5 text-sm text-white outline-none focus:border-accent-500/60 w-40"
+              />
+              <button onClick={() => commitEdit(account.id)} className="p-1 text-emerald-400 hover:text-emerald-300">
+                <Check size={14} />
+              </button>
+              <button onClick={() => setEditingId(null)} className="p-1 text-gray-500 hover:text-gray-300">
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <div
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => navigate(`/accounts/${account.id}`)}
+            >
+              <p className="font-medium text-white truncate">{account.name}</p>
+              {account.is_closed && (
+                <span className="text-xs text-gray-500 bg-gray-800 rounded-full px-2 py-0.5 shrink-0">geschlossen</span>
+              )}
+            </div>
+          )}
           <p className="text-xs text-gray-500">
             {account.type}
             {updated && ` · Zuletzt ${formatDate(updated)}`}
@@ -86,6 +126,13 @@ export function AccountsPage() {
         </div>
 
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          <button
+            onClick={() => startEdit(account)}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+            title="Name bearbeiten"
+          >
+            <Pencil size={14} />
+          </button>
           {!account.is_closed && (
             <>
               <button
@@ -160,14 +207,14 @@ export function AccountsPage() {
       ) : (
         <div className="space-y-4">
           {/* Active */}
-          <div className="glass rounded-2xl p-2">
-            <AnimatePresence>
+          <motion.div layout className="glass rounded-2xl p-2">
+            <AnimatePresence mode="popLayout">
               {active.map((a) => <AccountRow key={a.id} account={a} />)}
             </AnimatePresence>
             {active.length === 0 && (
               <p className="text-gray-600 text-sm text-center py-4">Keine aktiven Konten</p>
             )}
-          </div>
+          </motion.div>
 
           {/* Closed */}
           {closed.length > 0 && (
@@ -187,7 +234,9 @@ export function AccountsPage() {
                     exit={{ opacity: 0, height: 0 }}
                     className="glass rounded-2xl p-2 opacity-60"
                   >
-                    {closed.map((a) => <AccountRow key={a.id} account={a} />)}
+                    <AnimatePresence mode="popLayout">
+                      {closed.map((a) => <AccountRow key={a.id} account={a} />)}
+                    </AnimatePresence>
                   </motion.div>
                 )}
               </AnimatePresence>
