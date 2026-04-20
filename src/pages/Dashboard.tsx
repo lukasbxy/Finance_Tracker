@@ -1,14 +1,35 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { 
-  TrendingUp, 
-  Plus, 
-  ChevronRight, 
-  BarChart3, 
-  PieChart as PieIcon, 
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import {
+  TrendingUp,
+  Plus,
+  ChevronRight,
+  BarChart3,
+  PieChart as PieIcon,
   Calendar,
   ArrowUpRight,
-  Target
+  Target,
+  GripVertical,
+  LayoutDashboard,
+  Check,
+  RefreshCw,
 } from 'lucide-react'
 import { useAccounts } from '../hooks/useAccounts'
 import { useBalanceEntries } from '../hooks/useBalanceEntries'
@@ -44,15 +65,73 @@ const TIME_RANGE_LABELS: Record<TimeRange, string> = {
   '1m': '1M', '3m': '3M', '6m': '6M', '1y': '1J', '2y': '2J', '3y': '3J', '4y': '4J', '5y': '5J', '10y': '10J',
 }
 
+// ── Section IDs & default order ────────────────────────────────────────────
+
+const DEFAULT_SECTION_ORDER = ['metrics', 'chart', 'accounts', 'analytics', 'insights'] as const
+type SectionId = typeof DEFAULT_SECTION_ORDER[number]
+
+const SECTION_LABELS: Record<SectionId, string> = {
+  metrics: 'Kennzahlen',
+  chart: 'Vermögensverlauf',
+  accounts: 'Konten & Aufteilung',
+  analytics: 'Detaillierte Auswertungen',
+  insights: 'Portfolio-Einblicke',
+}
+
+// ── SortableSection ─────────────────────────────────────────────────────────
+
+interface SortableSectionProps {
+  id: string
+  sortMode: boolean
+  children: React.ReactNode
+}
+
+function SortableSection({ id, sortMode, children }: SortableSectionProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`relative ${isDragging ? 'opacity-50 z-50' : ''} ${sortMode ? 'rounded-2xl ring-1 ring-white/10 p-1' : ''}`}
+    >
+      {sortMode && (
+        <div className="flex items-center gap-2 mb-2 px-2 pt-1">
+          <button
+            {...attributes}
+            {...listeners}
+            className="p-1.5 text-gray-500 hover:text-gray-300 cursor-grab active:cursor-grabbing touch-none select-none rounded-lg hover:bg-white/10 transition-colors"
+            tabIndex={-1}
+          >
+            <GripVertical size={16} />
+          </button>
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-widest select-none">
+            {SECTION_LABELS[id as SectionId]}
+          </span>
+        </div>
+      )}
+      <div className={sortMode ? 'pointer-events-none opacity-70' : ''}>{children}</div>
+    </div>
+  )
+}
+
+// ── Dashboard ───────────────────────────────────────────────────────────────
+
 export function Dashboard() {
   const { accounts, createAccount, loading: accountsLoading } = useAccounts()
   const { entries, addEntry, loading: entriesLoading } = useBalanceEntries()
-  const { settings } = useUserSettings()
+  const { settings, updateSettings, resetSettings } = useUserSettings()
   const navigate = useNavigate()
 
   const [timeRange, setTimeRange] = useState<TimeRange>('5y')
   const [addBalanceFor, setAddBalanceFor] = useState<Account | null>(null)
   const [showCreateAccount, setShowCreateAccount] = useState(false)
+  const [sortMode, setSortMode] = useState(false)
+  const [localOrder, setLocalOrder] = useState<string[]>([])
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
 
   const latestBalances = useMemo(() => getLatestBalancePerAccount(entries), [entries])
   const activeAccounts = useMemo(() => {
@@ -82,9 +161,43 @@ export function Dashboard() {
     if (entries.length < 2) return 0
     const firstDate = new Date(Math.min(...entries.map(e => new Date(e.recorded_at).getTime())))
     const months = Math.max(1, (new Date().getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44))
-    const totalChange = totalWealth - (entries[0]?.amount || 0) // Simple approximation
+    const totalChange = totalWealth - (entries[0]?.amount || 0)
     return totalChange / months
   }, [entries, totalWealth])
+
+  const sectionOrder: string[] = useMemo(() => {
+    const saved = settings.dashboardOrder
+    if (saved?.length) return saved
+    return [...DEFAULT_SECTION_ORDER]
+  }, [settings.dashboardOrder])
+
+  const displayOrder = sortMode ? localOrder : sectionOrder
+
+  function enterSortMode() {
+    setLocalOrder(sectionOrder)
+    setSortMode(true)
+  }
+
+  async function saveSortOrder() {
+    await updateSettings({ dashboardOrder: localOrder })
+    setSortMode(false)
+  }
+
+  async function resetSortOrder() {
+    await resetSettings('dashboardOrder')
+    setSortMode(false)
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (over && active.id !== over.id) {
+      setLocalOrder((prev) => {
+        const oldIdx = prev.indexOf(active.id as string)
+        const newIdx = prev.indexOf(over.id as string)
+        return arrayMove(prev, oldIdx, newIdx)
+      })
+    }
+  }
 
   const loading = accountsLoading || entriesLoading
 
@@ -96,51 +209,37 @@ export function Dashboard() {
     )
   }
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 py-8 md:px-8 space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Finanz-Dashboard</h1>
-          <p className="text-gray-500 mt-1">Willkommen zurück! Hier ist dein aktueller Stand.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="secondary" onClick={() => setShowCreateAccount(true)} className="rounded-xl">
-            <Plus size={18} className="mr-2" />
-            Konto hinzufügen
-          </Button>
-        </div>
-      </div>
-
-      {/* Analytics Grid */}
+  const sections: Record<string, React.ReactNode> = {
+    metrics: (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard 
-          title="Gesamtvermögen" 
-          value={formatCurrency(totalWealth)} 
+        <MetricCard
+          title="Gesamtvermögen"
+          value={formatCurrency(totalWealth)}
           icon={TrendingUp}
           trend={{ value: wealthDeltaPctMonth, label: 'letzter Monat' }}
         />
-        <MetricCard 
-          title="Ø Monatswachstum" 
-          value={formatCurrency(avgMonthlyChange)} 
+        <MetricCard
+          title="Ø Monatswachstum"
+          value={formatCurrency(avgMonthlyChange)}
           icon={ArrowUpRight}
           subtitle="Basierend auf Historie"
         />
-        <MetricCard 
-          title="Aktive Konten" 
-          value={activeAccounts.length} 
+        <MetricCard
+          title="Aktive Konten"
+          value={activeAccounts.length}
           icon={BarChart3}
           subtitle={`${accounts.length - activeAccounts.length} geschlossene Konten`}
         />
-        <MetricCard 
-          title="Letzte Änderung" 
-          value={formatCurrency(wealthDeltaMonth)} 
+        <MetricCard
+          title="Letzte Änderung"
+          value={formatCurrency(wealthDeltaMonth)}
           icon={Calendar}
           subtitle="In den letzten 30 Tagen"
         />
       </div>
+    ),
 
-      {/* Main Chart Section */}
+    chart: (
       <Card className="p-4 md:p-8 bg-white/[0.02] border-white/5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div>
@@ -168,9 +267,10 @@ export function Dashboard() {
         </div>
         <NetWorthChart accounts={accounts} entries={entries} days={TIME_RANGE_DAYS[timeRange]} />
       </Card>
+    ),
 
+    accounts: (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left: Account List */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Deine Konten</h2>
@@ -220,7 +320,6 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* Right: Distributions */}
         <div className="space-y-6">
           <Card className="p-6 border-white/5 bg-white/[0.01]">
             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2">
@@ -229,7 +328,7 @@ export function Dashboard() {
             </h3>
             <AllocationChart accounts={accounts} entries={entries} />
           </Card>
-          
+
           <Card className="p-6 border-white/5 bg-white/[0.01]">
             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2">
               <Target size={16} className="text-emerald-400" />
@@ -239,9 +338,10 @@ export function Dashboard() {
           </Card>
         </div>
       </div>
+    ),
 
-      {/* High-Level Analytics Section */}
-      <div className="space-y-6 pt-4">
+    analytics: (
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Detaillierte Auswertungen</h2>
         </div>
@@ -254,13 +354,79 @@ export function Dashboard() {
             <ProjectedWealth totalWealth={totalWealth} avgMonthlyChange={avgMonthlyChange} />
           </div>
         </div>
+      </div>
+    ),
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
-          <FinancialFreedom totalWealth={totalWealth} />
-          <TopMovers accounts={accounts} entries={entries} />
-          <PortfolioHealth accounts={accounts} entries={entries} />
+    insights: (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <FinancialFreedom totalWealth={totalWealth} />
+        <TopMovers accounts={accounts} entries={entries} />
+        <PortfolioHealth accounts={accounts} entries={entries} />
+      </div>
+    ),
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-8 md:px-8 space-y-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Finanz-Dashboard</h1>
+          <p className="text-gray-500 mt-1">Willkommen zurück! Hier ist dein aktueller Stand.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          {sortMode ? (
+            <>
+              <Button
+                variant="secondary"
+                onClick={resetSortOrder}
+                className="rounded-xl text-gray-400"
+              >
+                <RefreshCw size={16} className="mr-2" />
+                Standard
+              </Button>
+              <Button
+                variant="primary"
+                onClick={saveSortOrder}
+                className="rounded-xl"
+              >
+                <Check size={16} className="mr-2" />
+                Fertig
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="secondary" onClick={enterSortMode} className="rounded-xl">
+                <LayoutDashboard size={16} className="mr-2" />
+                Anpassen
+              </Button>
+              <Button variant="secondary" onClick={() => setShowCreateAccount(true)} className="rounded-xl">
+                <Plus size={18} className="mr-2" />
+                Konto hinzufügen
+              </Button>
+            </>
+          )}
         </div>
       </div>
+
+      {sortMode && (
+        <p className="text-xs text-gray-500 -mt-4">
+          Ziehe die Abschnitte in die gewünschte Reihenfolge. Klicken und halten zum Verschieben.
+        </p>
+      )}
+
+      {/* Sections */}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={displayOrder} strategy={verticalListSortingStrategy}>
+          <div className="space-y-8">
+            {displayOrder.map((sectionId) => (
+              <SortableSection key={sectionId} id={sectionId} sortMode={sortMode}>
+                {sections[sectionId]}
+              </SortableSection>
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       {/* Modals */}
       {addBalanceFor && (
