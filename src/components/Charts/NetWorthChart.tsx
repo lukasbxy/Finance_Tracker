@@ -68,7 +68,7 @@ export function NetWorthChart({ accounts, entries, days = 365 }: Props) {
   })), [data, days])
 
   const activeAccounts = useMemo(() => 
-    accounts.filter(a => formatted.some(d => (d[a.id] as number) > 0)),
+    accounts.filter(a => formatted.some((d: any) => d[a.id] > 0)),
     [accounts, formatted]
   )
 

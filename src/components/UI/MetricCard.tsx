@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion'
 import { LucideIcon } from 'lucide-react'
 import { Card } from './Card'
 

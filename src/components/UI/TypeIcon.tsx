@@ -1,4 +1,3 @@
-import React from 'react'
 import * as Icons from 'lucide-react'
 import { LucideProps } from 'lucide-react'
 import { getAccountTypeIconName } from '../../lib/utils'

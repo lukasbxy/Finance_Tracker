@@ -1,9 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import { 
   TrendingUp, 
-  TrendingDown, 
   Plus, 
   ChevronRight, 
   BarChart3, 
