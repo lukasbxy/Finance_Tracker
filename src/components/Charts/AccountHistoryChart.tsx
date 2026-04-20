@@ -40,18 +40,18 @@ export function AccountHistoryChart({ account, entries }: Props) {
   const [range, setRange] = useState<Range>('all')
 
   const data = useMemo(() => {
-    const cutoffMs = RANGE_DAYS[range] === Infinity
-      ? 0
-      : Date.now() - RANGE_DAYS[range] * 86400_000
-    const filtered = entries.filter(
-      (e) => RANGE_DAYS[range] === Infinity || new Date(e.recorded_at).getTime() >= cutoffMs,
-    )
-    return [...filtered]
+    const rangeDays = RANGE_DAYS[range]
+    const cutoffMs = rangeDays === Infinity ? 0 : Date.now() - rangeDays * 86400_000
+    
+    const filtered = entries
+      .filter((e) => rangeDays === Infinity || new Date(e.recorded_at).getTime() >= cutoffMs)
       .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
-      .map((e) => ({
-        dateLabel: getDateLabel(e.recorded_at, RANGE_DAYS[range]),
-        amount: Number(e.amount),
-      }))
+
+    return filtered.map((e) => ({
+      ts: new Date(e.recorded_at).getTime(),
+      amount: Number(e.amount),
+      dateLabel: getDateLabel(e.recorded_at, rangeDays),
+    }))
   }, [entries, range])
 
   const gradId = `acHist_${account.id.replace(/-/g, '')}`
@@ -96,10 +96,13 @@ export function AccountHistoryChart({ account, entries }: Props) {
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
               <XAxis 
-                dataKey="dateLabel" 
+                dataKey="ts" 
+                type="number"
+                domain={['dataMin', 'dataMax']}
                 tick={{ fill: '#6b7280', fontSize: 10 }} 
                 axisLine={false} 
                 tickLine={false} 
+                tickFormatter={(v) => getDateLabel(new Date(v).toISOString(), RANGE_DAYS[range])}
                 dy={10}
               />
               <YAxis

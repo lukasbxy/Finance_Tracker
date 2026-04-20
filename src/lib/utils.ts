@@ -44,6 +44,53 @@ export function getLatestBalancePerAccount(
   )
 }
 
+export function getInterpolatedBalancePerAccount(
+  entries: BalanceEntry[],
+  asOf: Date,
+): Record<string, number> {
+  const ts = asOf.getTime()
+  const accountIds = Array.from(new Set(entries.map(e => e.account_id)))
+  const result: Record<string, number> = {}
+
+  // Pre-sort all entries by date
+  const sortedEntries = [...entries].sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
+
+  for (const id of accountIds) {
+    const accountEntries = sortedEntries.filter(e => e.account_id === id)
+
+    if (accountEntries.length === 0) {
+      result[id] = 0
+      continue
+    }
+
+    let prev: BalanceEntry | null = null
+    let next: BalanceEntry | null = null
+
+    for (const entry of accountEntries) {
+      const entryTs = new Date(entry.recorded_at).getTime()
+      if (entryTs <= ts) {
+        prev = entry
+      } else {
+        next = entry
+        break
+      }
+    }
+
+    if (!prev) {
+      result[id] = 0
+    } else if (!next) {
+      result[id] = Number(prev.amount)
+    } else {
+      const prevTs = new Date(prev.recorded_at).getTime()
+      const nextTs = new Date(next.recorded_at).getTime()
+      const factor = (ts - prevTs) / (nextTs - prevTs)
+      result[id] = Number(prev.amount) + (Number(next.amount) - Number(prev.amount)) * factor
+    }
+  }
+
+  return result
+}
+
 export function buildNetWorthTimeSeries(
   entries: BalanceEntry[],
   days = 365,
@@ -65,26 +112,18 @@ export function buildNetWorthTimeSeries(
     sampled.push(todayStart)
   }
 
-  const accountIds = Array.from(new Set(entries.map(e => e.account_id)))
-
   return sampled.map((day) => {
-    // Für jeden Tag den Stand am ENDE des Tages berechnen
     const isToday = day.getTime() === todayStart.getTime()
     const cutoff = isToday ? now : endOfDay(day)
     
-    const balances = getLatestBalancePerAccount(entries, cutoff)
+    // Use interpolation for linear growth between points
+    const balances = getInterpolatedBalancePerAccount(entries, cutoff)
     const total = Object.values(balances).reduce((sum, v) => sum + v, 0)
     
-    // Sicherstellen, dass jedes Konto einen Wert hat (Default 0)
-    const allBalances: Record<string, number> = {}
-    for (const id of accountIds) {
-      allBalances[id] = balances[id] ?? 0
-    }
-
     return {
       date: format(day, 'yyyy-MM-dd'),
       total,
-      ...allBalances,
+      ...balances,
     }
   })
 }
