@@ -1,4 +1,4 @@
-import { format, parseISO, startOfDay, eachDayOfInterval, subDays } from 'date-fns'
+import { format, parseISO, startOfDay, endOfDay, eachDayOfInterval, subDays } from 'date-fns'
 import { de } from 'date-fns/locale'
 import type { BalanceEntry } from '../types/finance'
 
@@ -50,20 +50,28 @@ export function buildNetWorthTimeSeries(
 ): { date: string; total: number; [key: string]: string | number }[] {
   if (entries.length === 0) return []
 
-  const today = startOfDay(new Date())
+  const now = new Date()
+  const todayStart = startOfDay(now)
   const firstEntryTs = Math.min(...entries.map((e) => new Date(e.recorded_at).getTime()))
   const firstEntryDate = startOfDay(new Date(firstEntryTs))
   
-  const requestedStart = subDays(today, days)
+  const requestedStart = subDays(todayStart, days)
   const start = requestedStart < firstEntryDate ? firstEntryDate : requestedStart
 
   const step = days <= 90 ? 1 : days <= 365 ? 3 : days <= 730 ? 7 : days <= 1825 ? 14 : 30
-  const allDays = eachDayOfInterval({ start, end: today })
+  const allDays = eachDayOfInterval({ start, end: todayStart })
   const sampled = allDays.filter((_, i) => i % step === 0)
-  if (sampled[sampled.length - 1]?.getTime() !== today.getTime()) sampled.push(today)
+  if (sampled[sampled.length - 1]?.getTime() !== todayStart.getTime()) {
+    sampled.push(todayStart)
+  }
 
   return sampled.map((day) => {
-    const balances = getLatestBalancePerAccount(entries, day)
+    // Für jeden Tag den Stand am ENDE des Tages berechnen
+    // Für heute (letzter Punkt) nehmen wir 'now', um alles bis zu dieser Sekunde einzubeziehen
+    const isToday = day.getTime() === todayStart.getTime()
+    const cutoff = isToday ? now : endOfDay(day)
+    
+    const balances = getLatestBalancePerAccount(entries, cutoff)
     const total = Object.values(balances).reduce((sum, v) => sum + v, 0)
     return {
       date: format(day, 'yyyy-MM-dd'),
