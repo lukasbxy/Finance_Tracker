@@ -9,7 +9,7 @@ interface CardProps {
 }
 
 export function Card({ children, className = '', onClick, animate = true }: CardProps) {
-  const base = 'glass rounded-2xl p-5'
+  const base = 'glass rounded-2xl p-4 md:p-5'
   const clickable = onClick ? 'cursor-pointer glass-hover' : ''
 
   if (!animate) {

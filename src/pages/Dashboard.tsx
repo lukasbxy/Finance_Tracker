@@ -99,7 +99,7 @@ export function Dashboard() {
       </div>
 
       {/* Analytics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard 
           title="Gesamtvermögen" 
           value={formatCurrency(totalWealth)} 
@@ -127,7 +127,7 @@ export function Dashboard() {
       </div>
 
       {/* Main Chart Section */}
-      <Card className="p-6 md:p-8 bg-white/[0.02] border-white/5">
+      <Card className="p-4 md:p-8 bg-white/[0.02] border-white/5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div>
             <h2 className="text-xl font-bold text-white flex items-center gap-2">

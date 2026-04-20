@@ -65,13 +65,13 @@ function AccountRow({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, scale: 0.97 }}
       transition={{ duration: 0.2 }}
-      className="flex items-center gap-4 p-3 rounded-2xl hover:bg-white/5 transition-all group border border-transparent hover:border-white/5"
+      className="flex items-center gap-3 md:gap-4 p-2 md:p-3 rounded-2xl hover:bg-white/5 transition-all group border border-transparent hover:border-white/5"
     >
       <div
-        className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-inner shrink-0"
+        className="w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center text-white shadow-inner shrink-0"
         style={{ backgroundColor: account.color || '#6366f1' }}
       >
-        <TypeIcon type={account.type} size={18} />
+        <TypeIcon type={account.type} size={16} className="md:w-[18px] md:h-[18px]" />
       </div>
 
       <div className="flex-1 min-w-0">
