@@ -1,16 +1,27 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Wallet, ChevronRight, CheckCircle, RotateCcw, Trash2, Pencil, Check, X } from 'lucide-react'
+import { 
+  Plus, 
+  Wallet, 
+  CheckCircle, 
+  RotateCcw, 
+  Trash2, 
+  Pencil, 
+  Check, 
+  X, 
+  ChevronDown, 
+  ChevronRight as ChevronRightIcon 
+} from 'lucide-react'
 import { useAccounts } from '../hooks/useAccounts'
 import { useBalanceEntries } from '../hooks/useBalanceEntries'
 import { Button } from '../components/UI/Button'
 import { AccountForm } from '../components/Accounts/AccountForm'
 import { CloseAccountModal } from '../components/Accounts/CloseAccountModal'
 import { AddBalanceModal } from '../components/Accounts/AddBalanceModal'
-import { formatCurrency, formatDate, getLatestBalancePerAccount, getAccountTypeIcon } from '../lib/utils'
+import { TypeIcon } from '../components/UI/TypeIcon'
+import { formatCurrency, formatDate, getLatestBalancePerAccount } from '../lib/utils'
 import type { Account } from '../types/finance'
-import { useMemo } from 'react'
 
 export function AccountsPage() {
   const navigate = useNavigate()
@@ -55,7 +66,7 @@ export function AccountsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-[80vh]">
         <div className="w-8 h-8 border-2 border-accent-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
@@ -73,13 +84,13 @@ export function AccountsPage() {
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, scale: 0.97 }}
         transition={{ duration: 0.2 }}
-        className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors group"
+        className="flex items-center gap-4 p-3 rounded-2xl hover:bg-white/5 transition-all group border border-transparent hover:border-white/5"
       >
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
-          style={{ backgroundColor: `${account.color ?? '#6366f1'}20` }}
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-inner shrink-0"
+          style={{ backgroundColor: account.color || '#6366f1' }}
         >
-          {account.icon ?? getAccountTypeIcon(account.type)}
+          <TypeIcon type={account.type} size={18} />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -107,28 +118,28 @@ export function AccountsPage() {
               className="flex items-center gap-2 cursor-pointer"
               onClick={() => navigate(`/accounts/${account.id}`)}
             >
-              <p className="font-medium text-white truncate">{account.name}</p>
+              <p className="font-bold text-white truncate text-sm">{account.name}</p>
               {account.is_closed && (
-                <span className="text-xs text-gray-500 bg-gray-800 rounded-full px-2 py-0.5 shrink-0">geschlossen</span>
+                <span className="text-[10px] font-bold text-gray-500 bg-white/5 border border-white/10 rounded-lg px-2 py-0.5 uppercase tracking-wider shrink-0">geschlossen</span>
               )}
             </div>
           )}
-          <p className="text-xs text-gray-500">
+          <p className="text-[10px] text-gray-500 font-medium uppercase tracking-tight">
             {account.type}
-            {updated && ` · Zuletzt ${formatDate(updated)}`}
+            {updated && ` · ${formatDate(updated)}`}
           </p>
         </div>
 
         <div className="text-right shrink-0">
-          <p className={`font-semibold ${balance !== undefined ? 'text-white' : 'text-gray-600'}`}>
+          <p className={`font-bold tracking-tight ${balance !== undefined ? 'text-white' : 'text-gray-600'}`}>
             {balance !== undefined ? formatCurrency(balance) : '—'}
           </p>
         </div>
 
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all shrink-0">
           <button
             onClick={() => startEdit(account)}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-colors"
             title="Name bearbeiten"
           >
             <Pencil size={14} />
@@ -137,14 +148,14 @@ export function AccountsPage() {
             <>
               <button
                 onClick={() => setAddBalanceFor(account)}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-accent-400 hover:bg-accent-500/10 transition-colors"
+                className="p-1.5 rounded-lg text-gray-500 hover:text-accent-400 hover:bg-accent-500/10 transition-colors"
                 title="Stand aktualisieren"
               >
                 <Plus size={15} />
               </button>
               <button
                 onClick={() => setCloseTarget(account)}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
+                className="p-1.5 rounded-lg text-gray-500 hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
                 title="Konto schließen"
               >
                 <CheckCircle size={15} />
@@ -154,25 +165,19 @@ export function AccountsPage() {
           {account.is_closed && (
             <button
               onClick={() => reopenAccount(account.id)}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+              className="p-1.5 rounded-lg text-gray-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
               title="Konto wieder öffnen"
             >
               <RotateCcw size={15} />
             </button>
           )}
           <button
-            onClick={() => navigate(`/accounts/${account.id}`)}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
-          >
-            <ChevronRight size={15} />
-          </button>
-          <button
             onClick={() => {
               if (confirm(`"${account.name}" wirklich löschen? Alle Einträge gehen verloren.`)) {
                 deleteAccount(account.id)
               }
             }}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+            className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
             title="Konto löschen"
           >
             <Trash2 size={15} />
@@ -183,48 +188,53 @@ export function AccountsPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 md:px-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-4xl mx-auto px-4 py-8 md:px-8 space-y-8">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Konten</h1>
-          <p className="text-gray-500 text-sm mt-0.5">{active.length} aktiv{closed.length > 0 && `, ${closed.length} geschlossen`}</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Deine Konten</h1>
+          <p className="text-gray-500 mt-1">{active.length} aktive Konten</p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>
-          <Plus size={16} />
-          Neues Konto
+        <Button onClick={() => setShowCreate(true)} className="rounded-xl">
+          <Plus size={18} className="mr-2" />
+          Konto anlegen
         </Button>
       </div>
 
       {accounts.length === 0 ? (
-        <div className="glass rounded-2xl p-12 text-center">
-          <Wallet size={40} className="text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-400 mb-4">Noch keine Konten angelegt.</p>
+        <div className="glass rounded-3xl p-16 text-center border-white/5">
+          <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 text-gray-500">
+            <Wallet size={32} />
+          </div>
+          <p className="text-gray-400 font-medium mb-6">Noch keine Konten angelegt.</p>
           <Button onClick={() => setShowCreate(true)}>
-            <Plus size={16} />
-            Konto anlegen
+            <Plus size={16} className="mr-2" />
+            Erstes Konto anlegen
           </Button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {/* Active */}
-          <motion.div layout className="glass rounded-2xl p-2">
-            <AnimatePresence mode="popLayout">
-              {active.map((a) => <AccountRow key={a.id} account={a} />)}
-            </AnimatePresence>
-            {active.length === 0 && (
-              <p className="text-gray-600 text-sm text-center py-4">Keine aktiven Konten</p>
-            )}
-          </motion.div>
+          <div className="space-y-2">
+            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">Aktiv</h2>
+            <div className="glass rounded-2xl p-2 border-white/5">
+              <AnimatePresence mode="popLayout">
+                {active.map((a) => <AccountRow key={a.id} account={a} />)}
+              </AnimatePresence>
+              {active.length === 0 && (
+                <p className="text-gray-600 text-sm text-center py-8">Keine aktiven Konten</p>
+              )}
+            </div>
+          </div>
 
           {/* Closed */}
           {closed.length > 0 && (
-            <div>
+            <div className="space-y-2">
               <button
                 onClick={() => setShowClosed((v) => !v)}
-                className="text-xs text-gray-500 hover:text-gray-300 transition-colors mb-2 flex items-center gap-1.5"
+                className="text-xs font-bold text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-2 px-1 uppercase tracking-widest"
               >
-                <span>{showClosed ? '▼' : '▶'}</span>
-                Geschlossene Konten ({closed.length})
+                {showClosed ? <ChevronDown size={14} /> : <ChevronRightIcon size={14} />}
+                Geschlossen ({closed.length})
               </button>
               <AnimatePresence>
                 {showClosed && (
@@ -232,7 +242,7 @@ export function AccountsPage() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="glass rounded-2xl p-2 opacity-60"
+                    className="glass rounded-2xl p-2 border-white/5 opacity-60 overflow-hidden"
                   >
                     <AnimatePresence mode="popLayout">
                       {closed.map((a) => <AccountRow key={a.id} account={a} />)}

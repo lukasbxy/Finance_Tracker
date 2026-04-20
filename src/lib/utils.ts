@@ -47,7 +47,7 @@ export function getLatestBalancePerAccount(
 export function buildNetWorthTimeSeries(
   entries: BalanceEntry[],
   days = 365,
-): { date: string; total: number }[] {
+): { date: string; total: number; [key: string]: string | number }[] {
   if (entries.length === 0) return []
 
   const today = startOfDay(new Date())
@@ -64,6 +64,7 @@ export function buildNetWorthTimeSeries(
     return {
       date: format(day, 'yyyy-MM-dd'),
       total,
+      ...balances,
     }
   })
 }
@@ -95,14 +96,14 @@ export function buildMonthlyChangeSeries(
 }
 
 export const ACCOUNT_TYPES = [
-  { value: 'bank', label: 'Bankkonto', icon: '🏦' },
-  { value: 'depot', label: 'Depot', icon: '📈' },
-  { value: 'wallet', label: 'Geldbeutel', icon: '👛' },
-  { value: 'paypal', label: 'PayPal', icon: '💳' },
-  { value: 'crypto', label: 'Krypto', icon: '₿' },
-  { value: 'savings', label: 'Sparkonto', icon: '🐷' },
-  { value: 'cash', label: 'Bargeld', icon: '💵' },
-  { value: 'other', label: 'Sonstiges', icon: '💰' },
+  { value: 'bank', label: 'Bankkonto', icon: 'Landmark' },
+  { value: 'depot', label: 'Depot', icon: 'LineChart' },
+  { value: 'wallet', label: 'Geldbeutel', icon: 'Wallet' },
+  { value: 'paypal', label: 'PayPal', icon: 'CreditCard' },
+  { value: 'crypto', label: 'Krypto', icon: 'Coins' },
+  { value: 'savings', label: 'Sparkonto', icon: 'PiggyBank' },
+  { value: 'cash', label: 'Bargeld', icon: 'Banknote' },
+  { value: 'other', label: 'Sonstiges', icon: 'HelpCircle' },
 ]
 
 export const ACCOUNT_COLORS = [
@@ -115,6 +116,6 @@ export function getAccountTypeLabel(type: string): string {
   return ACCOUNT_TYPES.find((t) => t.value === type)?.label ?? type
 }
 
-export function getAccountTypeIcon(type: string): string {
-  return ACCOUNT_TYPES.find((t) => t.value === type)?.icon ?? '💰'
+export function getAccountTypeIconName(type: string): string {
+  return ACCOUNT_TYPES.find((t) => t.value === type)?.icon ?? 'CircleHelp'
 }

@@ -7,7 +7,9 @@
     @apply border-gray-800;
   }
   body {
-    @apply bg-gray-950 text-gray-100;
+    @apply bg-gray-950 text-gray-100 min-h-screen;
+    background-image: radial-gradient(circle at top right, rgba(99, 102, 241, 0.05), transparent 400px),
+                      radial-gradient(circle at bottom left, rgba(139, 92, 246, 0.05), transparent 400px);
   }
   ::-webkit-scrollbar {
     width: 6px;

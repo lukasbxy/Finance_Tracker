@@ -15,15 +15,15 @@ const RANGE_DAYS: Record<Range, number> = {
   '3m': 90, '6m': 180, '1y': 365, '2y': 730, '3y': 1095, '5y': 1825, 'all': Infinity,
 }
 const RANGE_LABELS: Record<Range, string> = {
-  '3m': '3M', '6m': '6M', '1y': '1J', '2y': '2J', '3y': '3J', '5y': '5J', 'all': 'Alles',
+  '3m': '3M', '6m': '6M', '1y': '1J', '2y': '2J', '3y': '3J', '5y': '5J', 'all': 'ALLES',
 }
 
-function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) {
+function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   return (
-    <div className="glass rounded-xl px-3 py-2 text-sm shadow-xl">
-      <p className="text-gray-400 text-xs mb-1">{label}</p>
-      <p className="text-white font-semibold">{formatCurrency(payload[0].value)}</p>
+    <div className="glass rounded-xl px-3 py-2 text-sm shadow-xl border border-white/10">
+      <p className="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-1">{label}</p>
+      <p className="text-white font-bold">{formatCurrency(payload[0].value)}</p>
     </div>
   )
 }
@@ -58,60 +58,68 @@ export function AccountHistoryChart({ account, entries }: Props) {
   const gradId = `acHist_${account.id.replace(/-/g, '')}`
 
   return (
-    <div>
-      <div className="flex gap-1 mb-3 flex-wrap">
+    <div className="space-y-6">
+      <div className="flex bg-white/5 p-1 rounded-lg w-fit">
         {(Object.keys(RANGE_DAYS) as Range[]).map((r) => (
           <button
             key={r}
             onClick={() => setRange(r)}
-            className={`px-2 py-0.5 rounded-md text-xs font-medium transition-colors ${
+            className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${
               range === r
-                ? 'bg-white/15 text-white'
-                : 'text-gray-600 hover:text-gray-300 hover:bg-white/10'
+                ? 'bg-white/10 text-white shadow-sm'
+                : 'text-gray-500 hover:text-gray-300'
             }`}
           >
             {RANGE_LABELS[r]}
           </button>
         ))}
       </div>
+      
       {data.length < 2 ? (
-        <div className="h-48 flex items-center justify-center text-gray-600 text-sm">
-          Nicht genug Einträge für diesen Zeitraum
+        <div className="h-64 flex items-center justify-center text-gray-600 text-xs font-bold uppercase tracking-widest">
+          Zu wenig Daten
         </div>
       ) : (
         <motion.div
           key={range}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="h-48"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="h-64"
         >
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+            <AreaChart data={data} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={color} stopOpacity={0.3} />
+                  <stop offset="5%" stopColor={color} stopOpacity={0.2} />
                   <stop offset="95%" stopColor={color} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="dateLabel" tick={{ fill: '#6b7280', fontSize: 10 }} axisLine={false} tickLine={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+              <XAxis 
+                dataKey="dateLabel" 
+                tick={{ fill: '#6b7280', fontSize: 10 }} 
+                axisLine={false} 
+                tickLine={false} 
+                dy={10}
+              />
               <YAxis
                 tick={{ fill: '#6b7280', fontSize: 10 }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(v) => new Intl.NumberFormat('de-DE', { notation: 'compact', style: 'currency', currency: 'EUR' }).format(v)}
-                width={65}
+                width={50}
               />
               <Tooltip content={<CustomTooltip />} />
               <Area
                 type="monotone"
                 dataKey="amount"
                 stroke={color}
-                strokeWidth={2}
+                strokeWidth={3}
                 fill={`url(#${gradId})`}
-                dot={{ r: 3, fill: color, stroke: '#0f172a', strokeWidth: 2 }}
-                activeDot={{ r: 5, fill: color, stroke: '#fff', strokeWidth: 2 }}
+                dot={{ r: 4, fill: color, stroke: '#0f172a', strokeWidth: 2 }}
+                activeDot={{ r: 6, fill: color, stroke: '#fff', strokeWidth: 2 }}
+                animationDuration={1000}
               />
             </AreaChart>
           </ResponsiveContainer>

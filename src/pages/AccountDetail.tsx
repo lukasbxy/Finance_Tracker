@@ -8,7 +8,8 @@ import { Button } from '../components/UI/Button'
 import { Card } from '../components/UI/Card'
 import { AddBalanceModal } from '../components/Accounts/AddBalanceModal'
 import { AccountHistoryChart } from '../components/Charts/AccountHistoryChart'
-import { formatCurrency, formatDate, getAccountTypeIcon } from '../lib/utils'
+import { formatCurrency, formatDate } from '../lib/utils'
+import { TypeIcon } from '../components/UI/TypeIcon'
 
 export function AccountDetail() {
   const { id } = useParams<{ id: string }>()
@@ -47,34 +48,34 @@ export function AccountDetail() {
     <div className="max-w-3xl mx-auto px-4 py-6 md:px-6">
       {/* Header */}
       <motion.div
-        className="flex items-center gap-3 mb-6"
+        className="flex items-center gap-4 mb-8"
         initial={{ opacity: 0, x: -10 }}
         animate={{ opacity: 1, x: 0 }}
       >
         <button
           onClick={() => navigate('/accounts')}
-          className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+          className="p-2.5 rounded-xl text-gray-500 hover:text-white hover:bg-white/5 transition-all border border-white/5"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={18} />
         </button>
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-          style={{ backgroundColor: `${account.color ?? '#6366f1'}25` }}
+          className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg"
+          style={{ backgroundColor: account.color || '#6366f1' }}
         >
-          {account.icon ?? getAccountTypeIcon(account.type)}
+          <TypeIcon type={account.type} size={24} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-white truncate">{account.name}</h1>
+            <h1 className="text-2xl font-bold text-white tracking-tight truncate">{account.name}</h1>
             {account.is_closed && (
-              <span className="text-xs text-gray-500 bg-gray-800 rounded-full px-2 py-0.5 shrink-0">geschlossen</span>
+              <span className="text-[10px] font-bold text-gray-500 bg-white/5 border border-white/10 rounded-lg px-2 py-0.5 uppercase tracking-wider shrink-0">geschlossen</span>
             )}
           </div>
-          <p className="text-gray-500 text-sm">{account.type}</p>
+          <p className="text-gray-500 text-xs font-medium uppercase tracking-widest mt-1">{account.type}</p>
         </div>
         {!account.is_closed && (
-          <Button onClick={() => setShowAddBalance(true)}>
-            <Plus size={16} />
+          <Button onClick={() => setShowAddBalance(true)} className="rounded-xl shadow-lg shadow-accent-500/20">
+            <Plus size={18} className="mr-1.5" />
             Eintragen
           </Button>
         )}

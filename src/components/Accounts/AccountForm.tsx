@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Modal } from '../UI/Modal'
 import { Button } from '../UI/Button'
+import { TypeIcon } from '../UI/TypeIcon'
 import { ACCOUNT_TYPES, ACCOUNT_COLORS } from '../../lib/utils'
 import type { Account } from '../../types/finance'
 
@@ -66,14 +67,14 @@ export function AccountForm({ open, onClose, onSave, initial, title = 'Konto anl
                 key={t.value}
                 type="button"
                 onClick={() => setType(t.value)}
-                className={`flex flex-col items-center gap-1 p-2 rounded-xl border text-xs transition-all ${
+                className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl border text-[10px] font-bold transition-all ${
                   type === t.value
-                    ? 'border-accent-500/60 bg-accent-500/15 text-accent-300'
-                    : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20'
+                    ? 'border-accent-500 bg-accent-500/20 text-accent-300'
+                    : 'border-white/10 bg-white/5 text-gray-500 hover:border-white/20'
                 }`}
               >
-                <span className="text-lg">{t.icon}</span>
-                <span className="leading-tight text-center">{t.label}</span>
+                <TypeIcon name={t.icon} size={18} />
+                <span className="leading-tight text-center uppercase tracking-tighter">{t.label}</span>
               </button>
             ))}
           </div>
