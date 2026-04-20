@@ -51,7 +51,11 @@ export function buildNetWorthTimeSeries(
   if (entries.length === 0) return []
 
   const today = startOfDay(new Date())
-  const start = subDays(today, days)
+  const firstEntryTs = Math.min(...entries.map((e) => new Date(e.recorded_at).getTime()))
+  const firstEntryDate = startOfDay(new Date(firstEntryTs))
+  
+  const requestedStart = subDays(today, days)
+  const start = requestedStart < firstEntryDate ? firstEntryDate : requestedStart
 
   const step = days <= 90 ? 1 : days <= 365 ? 3 : days <= 730 ? 7 : days <= 1825 ? 14 : 30
   const allDays = eachDayOfInterval({ start, end: today })
