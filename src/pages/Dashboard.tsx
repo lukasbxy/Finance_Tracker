@@ -143,16 +143,16 @@ export function Dashboard() {
   }, [accounts, settings.accountOrder])
 
   const totalWealth = useMemo(
-    () => activeAccounts.reduce((sum, a) => sum + (latestBalances[a.id] ?? 0), 0),
-    [activeAccounts, latestBalances],
+    () => accounts.reduce((sum, a) => sum + (latestBalances[a.id] ?? 0), 0),
+    [accounts, latestBalances],
   )
 
   const wealthLastMonth = useMemo(() => {
     const cutoff = new Date()
     cutoff.setMonth(cutoff.getMonth() - 1)
     const old = getLatestBalancePerAccount(entries, cutoff)
-    return activeAccounts.reduce((sum, a) => sum + (old[a.id] ?? 0), 0)
-  }, [activeAccounts, entries])
+    return accounts.reduce((sum, a) => sum + (old[a.id] ?? 0), 0)
+  }, [accounts, entries])
 
   const wealthDeltaMonth = totalWealth - wealthLastMonth
   const wealthDeltaPctMonth = wealthLastMonth !== 0 ? (wealthDeltaMonth / Math.abs(wealthLastMonth)) * 100 : 0

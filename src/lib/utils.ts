@@ -94,6 +94,7 @@ export function getInterpolatedBalancePerAccount(
 export function buildNetWorthTimeSeries(
   entries: BalanceEntry[],
   days = 365,
+  targetAccountIds?: string[]
 ): { date: string; total: number; [key: string]: string | number }[] {
   if (entries.length === 0) return []
 
@@ -118,7 +119,14 @@ export function buildNetWorthTimeSeries(
     
     // Use interpolation for linear growth between points
     const balances = getInterpolatedBalancePerAccount(entries, cutoff)
-    const total = Object.values(balances).reduce((sum, v) => sum + v, 0)
+    
+    // Only sum up accounts that are in targetAccountIds (if provided)
+    const total = Object.entries(balances).reduce((sum, [id, v]) => {
+      if (!targetAccountIds || targetAccountIds.includes(id)) {
+        return sum + v
+      }
+      return sum
+    }, 0)
     
     return {
       date: format(day, 'yyyy-MM-dd'),

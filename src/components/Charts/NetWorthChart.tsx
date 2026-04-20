@@ -61,7 +61,10 @@ function getDateLabel(dateStr: string, days: number): string {
 
 export function NetWorthChart({ accounts, entries, days = 365 }: Props) {
   const [activePoint, setActivePoint] = useState<any>(null)
-  const data = useMemo(() => buildNetWorthTimeSeries(entries, days), [entries, days])
+  const data = useMemo(() => {
+    const ids = accounts.map(a => a.id)
+    return buildNetWorthTimeSeries(entries, days, ids)
+  }, [entries, days, accounts])
 
   const formatted = useMemo(() => data.map((d) => ({
     ...d,
