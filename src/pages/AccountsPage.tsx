@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -8,8 +8,6 @@ import {
   RotateCcw, 
   Trash2, 
   Pencil, 
-  Check, 
-  X, 
   ChevronDown, 
   ChevronRight as ChevronRightIcon 
 } from 'lucide-react'
@@ -27,36 +25,24 @@ interface AccountRowProps {
   account: Account
   balance: number | undefined
   updated: string | undefined
-  isEditing: boolean
-  editName: string
-  setEditName: (v: string) => void
-  commitEdit: (id: string) => Promise<void>
-  setEditingId: (id: string | null) => void
-  startEdit: (account: Account) => void
+  onEdit: (account: Account) => void
   setAddBalanceFor: (account: Account) => void
   setCloseTarget: (account: Account) => void
   reopenAccount: (id: string) => Promise<void>
   deleteAccount: (id: string) => Promise<void>
   navigate: (path: string) => void
-  editInputRef: React.RefObject<HTMLInputElement>
 }
 
 function AccountRow({ 
   account, 
   balance, 
   updated, 
-  isEditing, 
-  editName, 
-  setEditName, 
-  commitEdit, 
-  setEditingId,
-  startEdit,
+  onEdit,
   setAddBalanceFor,
   setCloseTarget,
   reopenAccount,
   deleteAccount,
-  navigate,
-  editInputRef
+  navigate
 }: AccountRowProps) {
   return (
     <motion.div
@@ -74,36 +60,15 @@ function AccountRow({
       </div>
 
       <div className="flex-1 min-w-0">
-        {isEditing ? (
-          <div className="flex items-center gap-1.5">
-            <input
-              ref={editInputRef}
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') commitEdit(account.id)
-                if (e.key === 'Escape') setEditingId(null)
-              }}
-              className="bg-white/10 border border-white/20 rounded-lg px-2 py-0.5 text-sm text-white outline-none focus:border-accent-500/60 w-40"
-            />
-            <button onClick={() => commitEdit(account.id)} className="p-1 text-emerald-400 hover:text-emerald-300">
-              <Check size={14} />
-            </button>
-            <button onClick={() => setEditingId(null)} className="p-1 text-gray-500 hover:text-gray-300">
-              <X size={14} />
-            </button>
-          </div>
-        ) : (
-          <div
-            className="flex items-center gap-2 cursor-pointer"
-            onClick={() => navigate(`/accounts/${account.id}`)}
-          >
-            <p className="font-bold text-white truncate text-sm">{account.name}</p>
-            {account.is_closed && (
-              <span className="text-[10px] font-bold text-gray-500 bg-white/5 border border-white/10 rounded-lg px-2 py-0.5 uppercase tracking-wider shrink-0">geschlossen</span>
-            )}
-          </div>
-        )}
+        <div
+          className="flex items-center gap-2 cursor-pointer"
+          onClick={() => navigate(`/accounts/${account.id}`)}
+        >
+          <p className="font-bold text-white truncate text-sm">{account.name}</p>
+          {account.is_closed && (
+            <span className="text-[10px] font-bold text-gray-500 bg-white/5 border border-white/10 rounded-lg px-2 py-0.5 uppercase tracking-wider shrink-0">geschlossen</span>
+          )}
+        </div>
         <p className="text-[10px] text-gray-500 font-medium uppercase tracking-tight">
           {account.type}
           {updated && ` · ${formatDate(updated)}`}
@@ -118,9 +83,9 @@ function AccountRow({
 
       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all shrink-0">
         <button
-          onClick={() => startEdit(account)}
+          onClick={() => onEdit(account)}
           className="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-colors"
-          title="Name bearbeiten"
+          title="Konto bearbeiten"
         >
           <Pencil size={14} />
         </button>
@@ -173,12 +138,10 @@ export function AccountsPage() {
   const { entries, addEntry } = useBalanceEntries()
 
   const [showCreate, setShowCreate] = useState(false)
+  const [editingAccount, setEditingAccount] = useState<Account | null>(null)
   const [closeTarget, setCloseTarget] = useState<Account | null>(null)
   const [addBalanceFor, setAddBalanceFor] = useState<Account | null>(null)
   const [showClosed, setShowClosed] = useState(false)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editName, setEditName] = useState('')
-  const editInputRef = useRef<HTMLInputElement>(null)
 
   const latestBalances = useMemo(() => getLatestBalancePerAccount(entries), [entries])
   const lastUpdated = useMemo(() => {
@@ -193,20 +156,6 @@ export function AccountsPage() {
 
   const active = accounts.filter((a) => !a.is_closed)
   const closed = accounts.filter((a) => a.is_closed)
-
-  function startEdit(account: Account) {
-    setEditingId(account.id)
-    setEditName(account.name)
-    setTimeout(() => editInputRef.current?.focus(), 50)
-  }
-
-  async function commitEdit(id: string) {
-    const trimmed = editName.trim()
-    if (trimmed && trimmed !== accounts.find((a) => a.id === id)?.name) {
-      await updateAccount(id, { name: trimmed })
-    }
-    setEditingId(null)
-  }
 
   if (loading) {
     return (
@@ -253,18 +202,12 @@ export function AccountsPage() {
                     account={a}
                     balance={latestBalances[a.id]}
                     updated={lastUpdated[a.id]}
-                    isEditing={editingId === a.id}
-                    editName={editName}
-                    setEditName={setEditName}
-                    commitEdit={commitEdit}
-                    setEditingId={setEditingId}
-                    startEdit={startEdit}
+                    onEdit={setEditingAccount}
                     setAddBalanceFor={setAddBalanceFor}
                     setCloseTarget={setCloseTarget}
                     reopenAccount={reopenAccount}
                     deleteAccount={deleteAccount}
                     navigate={navigate}
-                    editInputRef={editInputRef}
                   />
                 ))}
               </AnimatePresence>
@@ -299,18 +242,12 @@ export function AccountsPage() {
                           account={a}
                           balance={latestBalances[a.id]}
                           updated={lastUpdated[a.id]}
-                          isEditing={editingId === a.id}
-                          editName={editName}
-                          setEditName={setEditName}
-                          commitEdit={commitEdit}
-                          setEditingId={setEditingId}
-                          startEdit={startEdit}
+                          onEdit={setEditingAccount}
                           setAddBalanceFor={setAddBalanceFor}
                           setCloseTarget={setCloseTarget}
                           reopenAccount={reopenAccount}
                           deleteAccount={deleteAccount}
                           navigate={navigate}
-                          editInputRef={editInputRef}
                         />
                       ))}
                     </AnimatePresence>
@@ -322,7 +259,24 @@ export function AccountsPage() {
         </div>
       )}
 
-      <AccountForm open={showCreate} onClose={() => setShowCreate(false)} onSave={createAccount} />
+      {/* Modals */}
+      <AccountForm 
+        key={editingAccount ? editingAccount.id : 'new'}
+        open={showCreate || !!editingAccount} 
+        onClose={() => {
+          setShowCreate(false)
+          setEditingAccount(null)
+        }} 
+        onSave={async (data) => {
+          if (editingAccount) {
+            await updateAccount(editingAccount.id, data)
+          } else {
+            await createAccount(data)
+          }
+        }}
+        initial={editingAccount || undefined}
+        title={editingAccount ? 'Konto bearbeiten' : 'Konto anlegen'}
+      />
 
       {closeTarget && (
         <CloseAccountModal

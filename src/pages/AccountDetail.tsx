@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Plus, Trash2, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, TrendingUp, TrendingDown, Minus, Pencil } from 'lucide-react'
 import { useAccounts } from '../hooks/useAccounts'
 import { useBalanceEntries } from '../hooks/useBalanceEntries'
 import { Button } from '../components/UI/Button'
 import { Card } from '../components/UI/Card'
+import { AccountForm } from '../components/Accounts/AccountForm'
 import { AddBalanceModal } from '../components/Accounts/AddBalanceModal'
 import { AccountHistoryChart } from '../components/Charts/AccountHistoryChart'
 import { formatCurrency, formatDate } from '../lib/utils'
@@ -18,8 +19,10 @@ export function AccountDetail() {
   const { entries, loading, addEntry, deleteEntry } = useBalanceEntries(id)
 
   const [showAddBalance, setShowAddBalance] = useState(false)
+  const [showEdit, setShowEdit] = useState(false)
 
   const account = accounts.find((a) => a.id === id)
+  const { updateAccount } = useAccounts()
 
   const currentBalance = useMemo(() => {
     if (entries.length === 0) return null
@@ -67,6 +70,13 @@ export function AccountDetail() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold text-white tracking-tight truncate">{account.name}</h1>
+            <button
+              onClick={() => setShowEdit(true)}
+              className="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-colors shrink-0"
+              title="Konto bearbeiten"
+            >
+              <Pencil size={16} />
+            </button>
             {account.is_closed && (
               <span className="text-[10px] font-bold text-gray-500 bg-white/5 border border-white/10 rounded-lg px-2 py-0.5 uppercase tracking-wider shrink-0">geschlossen</span>
             )}
@@ -181,6 +191,17 @@ export function AccountDetail() {
         onClose={() => setShowAddBalance(false)}
         account={account}
         onAdd={addEntry}
+      />
+
+      <AccountForm
+        key={account.id}
+        open={showEdit}
+        onClose={() => setShowEdit(false)}
+        onSave={async (data) => {
+          await updateAccount(account.id, data)
+        }}
+        initial={account}
+        title="Konto bearbeiten"
       />
     </div>
   )
